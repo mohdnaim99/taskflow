@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Api.Dtos;
 using TaskFlow.Api.Services;
 
 namespace TaskFlow.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/tasks")]
+
 public class TasksController(ITaskService tasks) : ControllerBase
 {
     [HttpGet]
