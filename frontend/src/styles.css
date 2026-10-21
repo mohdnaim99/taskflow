@@ -1,0 +1,120 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #fff;
+  --text: #1d2430;
+  --muted: #667085;
+  --border: #d9dee7;
+  --primary: #1f5fbf;
+  --primary-dark: #174a96;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --ok: #067647;
+  --ok-bg: #ecfdf3;
+  --warn: #b54708;
+  --warn-bg: #fffaeb;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+h1, h2 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+  .btn:hover:not(:disabled) {
+    background: #f0f2f5;
+  }
+
+  .btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+  }
+
+.btn-danger {
+  color: var(--danger);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+  .field label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .field input, .field select, .field textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    width: 100%;
+  }
+
+    .field input.invalid, .field textarea.invalid {
+      border-color: var(--danger);
+    }
+
+.field-error {
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.alert {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #fecdca;
+}
