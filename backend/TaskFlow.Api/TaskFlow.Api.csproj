@@ -22,12 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Dtos\" />
-    <Folder Include="Exceptions\" />
     <Folder Include="Middleware\" />
-    <Folder Include="Services\" />
-    <Folder Include="Repositories\" />
     <Folder Include="Options\" />
   </ItemGroup>
 
