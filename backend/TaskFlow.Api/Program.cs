@@ -1,8 +1,19 @@
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using TaskFlow.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("ConnectionStrings__Default is not configured.");
+
+builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
