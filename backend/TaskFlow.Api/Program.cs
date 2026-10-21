@@ -13,21 +13,22 @@ using TaskFlow.Api.Repositories;
 using TaskFlow.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
-// ---- Konfigurasi (gagal awal kalau tiada; tiada rahsia dalam kod) ----
-var connectionString = builder.Configuration.GetConnectionString("Default")
+// ---- Konfigurasi (gagal awal jika tiada: tiada rahsia dalam kod) ----
+var connectionString = config.GetConnectionString("Default")
     ?? throw new InvalidOperationException("ConnectionStrings__Default is not configured.");
 
-var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+var jwt = config.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (jwt.Key.Length < 32)
     throw new InvalidOperationException("Jwt__Key must be set and at least 32 characters long.");
 
-var admin = builder.Configuration.GetSection("Auth").Get<AdminUserOptions>() ?? new AdminUserOptions();
+var admin = config.GetSection("Auth").Get<AdminUserOptions>() ?? new AdminUserOptions();
 if (string.IsNullOrWhiteSpace(admin.Email) || string.IsNullOrEmpty(admin.Password))
     throw new InvalidOperationException("Auth__Email and Auth__Password must be set.");
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<AdminUserOptions>(builder.Configuration.GetSection("Auth"));
+builder.Services.Configure<JwtOptions>(config.GetSection("Jwt"));
+builder.Services.Configure<AdminUserOptions>(config.GetSection("Auth"));
 
 // ---- Services ----
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
@@ -67,7 +68,6 @@ builder.Services
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key))
         };
-        // 401 dalam format ralat yang sama dengan API lain
         o.Events = new JwtBearerEvents
         {
             OnChallenge = async ctx =>
@@ -80,7 +80,7 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
-builder.Services.AddHealthChecks();   // untuk probe Kubernetes nanti
+builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -106,17 +106,31 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// ---- Terap migration semasa startup (cuba semula: DB mungkin belum siap) ----
+if (config.GetValue("Database:MigrateOnStartup", true))
+{
+    for (var attempt = 1; ; attempt++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+            break;
+        }
+        catch (Exception ex) when (attempt < 10)
+        {
+            app.Logger.LogWarning("Database not ready (attempt {Attempt}/10): {Message}", attempt, ex.Message);
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+    }
+}
+
 // ---- Pipeline ----
-app.UseMiddleware<ExceptionHandlingMiddleware>();   // paling awal
-
-// Swagger sentiasa aktif (brief: "Swagger enabled"). Dalam Docker, environment ialah
-// Production, jadi jika dalam blok IsDevelopment() ia tak akan muncul.
-app.UseSwagger();
+app.UseMiddleware<ExceptionHandlingMiddleware>();   // mesti paling awal
+app.UseSwagger();                                   // sengaja bukan Development sahaja
 app.UseSwaggerUI();
-
-app.UseAuthentication();   // mesti sebelum UseAuthorization
+app.UseAuthentication();                            // sebelum UseAuthorization
 app.UseAuthorization();
-
 app.MapControllers();
 app.MapHealthChecks("/health").AllowAnonymous();
 
