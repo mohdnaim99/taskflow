@@ -4,6 +4,8 @@ Angular 18 + ASP.NET Core 8 Web API + PostgreSQL, containerised with Docker and 
 
 ## Run with Docker Compose
 
+If port 8080 or 4200 is already in use, change `BACKEND_PORT` / `FRONTEND_PORT` in `.env`.
+
 Requirements: Docker Desktop (or Docker Engine + Compose v2).
 
 ```bash
