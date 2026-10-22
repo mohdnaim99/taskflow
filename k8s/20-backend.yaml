@@ -1,0 +1,62 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels: { app: backend }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      containers:
+        - name: backend
+          image: taskflow-backend:latest      # bina imej dahulu, lihat README
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            # Susunan penting: $(VAR) hanya boleh rujuk pembolehubah yang ditakrif lebih awal.
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: POSTGRES_DB } }
+            - name: POSTGRES_USER
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskflow-secret, key: POSTGRES_PASSWORD } }
+            - name: ConnectionStrings__Default
+              value: Host=db;Port=5432;Database=$(POSTGRES_DB);Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD)
+            - name: Jwt__Key
+              valueFrom: { secretKeyRef: { name: taskflow-secret, key: Jwt__Key } }
+            - name: Auth__Password
+              valueFrom: { secretKeyRef: { name: taskflow-secret, key: Auth__Password } }
+            - name: Jwt__Issuer
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: Jwt__Issuer } }
+            - name: Jwt__Audience
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: Jwt__Audience } }
+            - name: Jwt__ExpiryMinutes
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: Jwt__ExpiryMinutes } }
+            - name: Auth__Email
+              valueFrom: { configMapKeyRef: { name: taskflow-config, key: Auth__Email } }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 384Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector: { app: backend }
+  ports:
+    - port: 8080
+      targetPort: 8080

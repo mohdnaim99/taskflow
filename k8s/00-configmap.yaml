@@ -1,0 +1,11 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskflow-config
+data:
+  POSTGRES_DB: taskflow
+  POSTGRES_USER: taskflow
+  Jwt__Issuer: taskflow-api
+  Jwt__Audience: taskflow-web
+  Jwt__ExpiryMinutes: "60"
+  Auth__Email: admin@taskflow.com
